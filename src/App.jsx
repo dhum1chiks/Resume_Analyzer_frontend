@@ -175,7 +175,7 @@ const ResumeAnalyzerPro = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post('https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/extract-text', formData);
+      const response = await axios.post('https://resume-analyzer-backend-nine.vercel.app/extract-text', formData);
       setResumeText(response.data.text);
       showNotification('Text extracted successfully!');
     } catch (err) {
@@ -198,7 +198,7 @@ const ResumeAnalyzerPro = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/analyze', {
+      const response = await axios.post('https://resume-analyzer-backend-nine.vercel.app/analyze', {
         resume: resumeText,
         job_description: jobDescription,
         target_role: targetRole,
@@ -231,7 +231,7 @@ const ResumeAnalyzerPro = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        'https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/export-pdf',
+        'https://resume-analyzer-backend-nine.vercel.app/export-pdf',
         {
           resume: resumeText,
           job_description: jobDescription,
@@ -322,7 +322,7 @@ const ResumeAnalyzerPro = () => {
     if (!userId || userId === 'anonymous') return; // Avoid fetching for default or empty userId
     setIsLoading(true);
     try {
-      const response = await axios.get(`https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/history/${userId}`);
+      const response = await axios.get(`https://resume-analyzer-backend-nine.vercel.app/history/${userId}`);
       setHistory(response.data.attempts);
       showNotification('History fetched successfully!');
     } catch (err) {
@@ -643,8 +643,8 @@ const ResumeAnalyzerPro = () => {
           </div>
         )}
      <footer className="bg-gray-900 mt-16 text-center py-4 text-white">
-      <p>&copy; 2025 All Rights Reserved</p>
-    </footer>
+        <p>&copy; 2025 All Rights Reserved</p>
+      </footer>
       </div>
     </div>
   );
