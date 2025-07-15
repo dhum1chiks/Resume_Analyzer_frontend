@@ -175,7 +175,7 @@ const ResumeAnalyzerPro = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post('http://localhost:8000/extract-text', formData);
+      const response = await axios.post('https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/extract-text', formData);
       setResumeText(response.data.text);
       showNotification('Text extracted successfully!');
     } catch (err) {
@@ -198,7 +198,7 @@ const ResumeAnalyzerPro = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/analyze', {
+      const response = await axios.post('https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/analyze', {
         resume: resumeText,
         job_description: jobDescription,
         target_role: targetRole,
@@ -231,7 +231,7 @@ const ResumeAnalyzerPro = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:8000/export-pdf',
+        'https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/export-pdf',
         {
           resume: resumeText,
           job_description: jobDescription,
@@ -322,7 +322,7 @@ const ResumeAnalyzerPro = () => {
     if (!userId || userId === 'anonymous') return; // Avoid fetching for default or empty userId
     setIsLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8000/history/${userId}`);
+      const response = await axios.get(`https://resume-analyzer-frontend-m03wwwh7e-manis-projects-f441ec6f.vercel.app/history/${userId}`);
       setHistory(response.data.attempts);
       showNotification('History fetched successfully!');
     } catch (err) {
