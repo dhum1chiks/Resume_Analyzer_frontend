@@ -3,6 +3,9 @@ import axios from 'axios';
 import { debounce } from 'lodash';
 import { Upload, FileText, Sparkles, History, Settings, Download, Zap, Star, CheckCircle, AlertCircle, Brain, Target, Briefcase, MessageSquare, Users, TrendingUp, Eye, Loader, RefreshCw } from 'lucide-react';
 
+// Use environment variable for backend URL, fallback to primary deployment
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://resume-analyzer-backend-nine.vercel.app';
+
 // Memoize SettingsPanel to prevent unnecessary re-renders
 const SettingsPanel = React.memo(({ targetRole, setTargetRole, userId, setUserId, tone, setTone, templateId, setTemplateId, generateCoverLetter, setGenerateCoverLetter, generateInterviewQuestions, setGenerateInterviewQuestions }) => (
   <div className="bg-gray-900 rounded-2xl p-6 border border-green-500/20 space-y-6">
@@ -31,7 +34,7 @@ const SettingsPanel = React.memo(({ targetRole, setTargetRole, userId, setUserId
           onChange={(e) => setUserId(e.target.value || '')}
           onFocus={() => console.log('User ID input focused')}
           onBlur={() => console.log('User ID input blurred')}
-          placeholder="Optional"
+          placeholder="Optional (leave empty for anonymous)"
           className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all duration-300"
         />
       </div>
@@ -160,6 +163,14 @@ const ResumeAnalyzerPro = () => {
   const handleFileUpload = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      if (!selectedFile.name.match(/\.(pdf|docx)$/i)) {
+        showNotification('Please upload a PDF or DOCX file', 'error');
+        return;
+      }
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        showNotification('File size exceeds 10MB limit', 'error');
+        return;
+      }
       setFile(selectedFile);
       showNotification(`File "${selectedFile.name}" selected successfully!`);
     }
@@ -175,7 +186,12 @@ const ResumeAnalyzerPro = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post('https://resume-analyzer-backend-nine.vercel.app/extract-text', formData);
+      const response = await axios.post(`${backendUrl}/extract-text`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (!response.data.text) {
+        throw new Error('No text extracted from file');
+      }
       setResumeText(response.data.text);
       showNotification('Text extracted successfully!');
     } catch (err) {
@@ -198,7 +214,7 @@ const ResumeAnalyzerPro = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('https://resume-analyzer-backend-nine.vercel.app/analyze', {
+      const response = await axios.post(`${backendUrl}/analyze`, {
         resume: resumeText,
         job_description: jobDescription,
         target_role: targetRole,
@@ -206,11 +222,10 @@ const ResumeAnalyzerPro = () => {
         template_id: templateId,
         generate_cover_letter: generateCoverLetter,
         generate_interview_questions: generateInterviewQuestions,
-        user_id: userId || '1', // Default to '1' for consistency
+        user_id: userId || 'anonymous', // Use 'anonymous' instead of '1'
       });
-      console.log('Sent user_id:', userId || '1'); // Debug log
+      console.log('Sent user_id:', userId || 'anonymous'); // Debug log
       setAnalysisResult(response.data.analysis);
-      if (!userId) setUserId('1'); // Sync userId after successful analysis
       showNotification('Analysis completed successfully!');
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Analysis failed';
@@ -233,14 +248,14 @@ const ResumeAnalyzerPro = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        'https://resume-analyzer-backend-nine.vercel.app/export-pdf',
+        `${backendUrl}/export-pdf`,
         {
           resume: resumeText,
           job_description: jobDescription,
           tone,
           template_id: templateId,
           generate_cover_letter: generateCoverLetter,
-          user_id: userId || '1',
+          user_id: userId || 'anonymous',
         },
         { responseType: 'blob' }
       );
@@ -322,7 +337,7 @@ const ResumeAnalyzerPro = () => {
     }
     setIsLoading(true);
     try {
-      const response = await axios.get(`https://resume-analyzer-backend-nine.vercel.app/history/${userId}`);
+      const response = await axios.get(`${backendUrl}/history/${userId}`);
       setHistory(response.data.attempts);
       showNotification('History fetched successfully!');
     } catch (err) {
