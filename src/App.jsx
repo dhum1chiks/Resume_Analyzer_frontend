@@ -658,7 +658,7 @@ const ResumeAnalyzerPro = () => {
           </div>
         )}
         <footer className="bg-gray-900 mt-16 text-center py-4 text-white">
-          <p>&copy; 2025 All Rights Reserved</p>
+          <p>© 2025 All Rights Reserved</p>
         </footer>
       </div>
     </div>
