@@ -206,9 +206,11 @@ const ResumeAnalyzerPro = () => {
         template_id: templateId,
         generate_cover_letter: generateCoverLetter,
         generate_interview_questions: generateInterviewQuestions,
-        user_id: userId || 'anonymous',
+        user_id: userId || '1', // Default to '1' for consistency
       });
+      console.log('Sent user_id:', userId || '1'); // Debug log
       setAnalysisResult(response.data.analysis);
+      if (!userId) setUserId('1'); // Sync userId after successful analysis
       showNotification('Analysis completed successfully!');
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Analysis failed';
@@ -238,12 +240,11 @@ const ResumeAnalyzerPro = () => {
           tone,
           template_id: templateId,
           generate_cover_letter: generateCoverLetter,
-          user_id: userId || 'anonymous',
+          user_id: userId || '1',
         },
         { responseType: 'blob' }
       );
 
-      // Log response details for debugging
       console.log('Export PDF Response:', {
         status: response.status,
         headers: response.headers,
@@ -252,18 +253,15 @@ const ResumeAnalyzerPro = () => {
         contentType: response.headers['content-type'],
       });
 
-      // Check if the response contains a valid blob
       if (!response.data || response.data.size === 0) {
         throw new Error('Empty PDF response received');
       }
 
-      // Verify content type
       const contentType = response.headers['content-type'];
       if (!contentType || !contentType.includes('application/pdf')) {
         throw new Error(`Invalid content type: ${contentType}`);
       }
 
-      // Extract filename from Content-Disposition or use default
       let filename = `resume_${templateId}_${Date.now()}.pdf`;
       const contentDisposition = response.headers['content-disposition'];
       if (contentDisposition) {
@@ -271,7 +269,6 @@ const ResumeAnalyzerPro = () => {
         if (match) filename = match[1];
       }
 
-      // Create and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const a = document.createElement('a');
       a.href = url;
@@ -319,7 +316,10 @@ const ResumeAnalyzerPro = () => {
   };
 
   const fetchHistory = async () => {
-    if (!userId || userId === 'anonymous') return; // Avoid fetching for default or empty userId
+    if (!userId || userId === 'anonymous') {
+      showNotification('Please provide a valid User ID to fetch history', 'error');
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await axios.get(`https://resume-analyzer-backend-nine.vercel.app/history/${userId}`);
@@ -567,6 +567,15 @@ const ResumeAnalyzerPro = () => {
         <h3 className="text-lg font-semibold text-white">Analysis History</h3>
       </div>
       
+      <button
+        onClick={fetchHistory}
+        disabled={isLoading || !userId || userId === 'anonymous'}
+        className="mb-4 px-4 py-2 bg-green-500 text-black rounded-lg hover:bg-green-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <RefreshCw className="w-4 h-4 inline mr-2" />
+        Refresh History
+      </button>
+      
       {history.length === 0 ? (
         <div className="text-center py-12">
           <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -578,10 +587,16 @@ const ResumeAnalyzerPro = () => {
             <div key={index} className="bg-gray-800 rounded-xl p-4 border border-green-500/10">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-white font-medium">Analysis #{index + 1}</h4>
-                <span className="text-green-400 text-sm">{attempt.analysis_result.match_percentage}% match</span>
+                <span className="text-green-400 text-sm">
+                  {attempt.analysis_result?.match_percentage || 'N/A'}% match
+                </span>
               </div>
-              <p className="text-gray-400 text-sm mb-2">{attempt.target_role || 'Unknown Role'} • {attempt.template_id} Template</p>
-              <p className="text-gray-500 text-xs">{new Date(attempt.created_at).toLocaleString()}</p>
+              <p className="text-gray-400 text-sm mb-2">
+                {attempt.target_role || 'Unknown Role'} • {attempt.template_id} Template
+              </p>
+              <p className="text-gray-500 text-xs">
+                {attempt.created_at ? new Date(attempt.created_at).toLocaleString() : 'Unknown Date'}
+              </p>
             </div>
           ))}
         </div>
@@ -642,9 +657,9 @@ const ResumeAnalyzerPro = () => {
             <HistoryComponent />
           </div>
         )}
-     <footer className="bg-gray-900 mt-16 text-center py-4 text-white">
-        <p>&copy; 2025 All Rights Reserved</p>
-      </footer>
+        <footer className="bg-gray-900 mt-16 text-center py-4 text-white">
+          <p>&copy; 2025 All Rights Reserved</p>
+        </footer>
       </div>
     </div>
   );
